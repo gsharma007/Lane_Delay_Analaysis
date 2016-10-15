@@ -8,8 +8,8 @@ script, wd = argv
 pp = wd
 os.chdir(pp)
 
-input_file = csv.DictReader(open("ist_samplechennai.csv"))
-output_file = csv.writer(open("ist_scannedchennai.csv", "wb+"))
+input_file = csv.DictReader(open("ist_samplepune.csv"))
+output_file = csv.writer(open("ist_scannedpune.csv", "wb+"))
 output_file.writerow(["conn.cdn","conn.id","conn.vh","conn.o","conn.d","sd","sl","ss"])
 csv.field_size_limit(sys.maxsize)
 i=0
