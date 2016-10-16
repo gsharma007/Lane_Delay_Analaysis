@@ -1,13 +1,29 @@
-Version: 1.0
+system(paste("cd",getwd()))
+system("mongoexport -h 52.77.156.120 -d delhivery_db -c ist -f conn.id,conn.cdn,conn.vh,conn.o,conn.d,s -q '{\"conn.o\":{$in:[\"MAA_Poonamallee_HB (Tamil Nadu)\"]}, \"conn.d\":\"Bengaluru_Bomsndra_HB (Karnataka)\",\"cs.sd\":{$gt:new Date(1472688000000),$lt:new Date(1475193600000)},\"conn.vh\":\"Srfc-Saravana-BLR MAA FTL \"}' --type=csv -o ist_samplechennai.csv -u ro_express -p 'x[td7R%;,'")  ## for Chennai-Bangalore
+getwd()
 
-RestoreWorkspace: Default
-SaveWorkspace: Default
-AlwaysSaveHistory: Default
+system("mongoexport -h 52.77.156.120 -d delhivery_db -c ist -f conn.id,conn.cdn,conn.vh,conn.o,conn.d,s -q '{\"conn.o\":{$in:[\"Vellore_GndhiNgr_IP (Tamil Nadu)\"]}, \"conn.d\":\"Bengaluru_Bomsndra_HB (Karnataka)\",\"cs.sd\":{$gt:new Date(1472688000000),$lt:new Date(1475193600000)},\"conn.vh\":\"Srfc-Saravana-BLR MAA FTL \"}' --type=csv -o ist_samplevellore.csv -u ro_express -p 'x[td7R%;,'")  ## for Vellore-Bangalore
 
-EnableCodeIndexing: Yes
-UseSpacesForTab: Yes
-NumSpacesForTab: 2
-Encoding: UTF-8
+system(paste0("python ",getwd(),"/ist_scanchennai.py ",getwd()))
+ist_chennai <- read.csv("ist_scannedchennai.csv",stringsAsFactors = F)
+ist_vellore <- read.csv("ist_scannedvellore.csv",stringsAsFactors = F)
 
-RnwWeave: Sweave
-LaTeX: pdfLaTeX
+library(dplyr)
+ist_chennai <- ist_chennai %>% filter(ss %in% c("Pending","Dispatched"))
+ist_chennai <- ist_chennai %>% mutate(sd = as.POSIXct(paste(substring(sd,14,23),substring(sd,25,32)),format  = "%Y-%m-%d %H:%M:%S"))
+
+ist_vellore <- ist_vellore %>% filter(ss %in% c("Pending","Dispatched"))
+ist_vellore <- ist_vellore %>% mutate(sd = as.POSIXct(paste(substring(sd,14,23),substring(sd,25,32)),format  = "%Y-%m-%d %H:%M:%S"))
+
+library(splitstackshape)
+ist_chennai <- ist_chennai %>% group_by(conn.cdn,conn.id,conn.o,conn.d) %>% summarise(sd = paste(sd,collapse = ";")) %>% as.data.frame()
+ist_chennai <- ist_chennai %>% cSplit("sd",sep = ";",direction = "wide",type.convert = F) %>% as.data.frame()
+ist_chennai <- ist_chennai %>% select(conn.cdn,conn.id,conn.o,conn.d,dispatch = sd_1, pending = sd_2, pending_2 = sd_3)
+
+ist_vellore <- ist_vellore %>% group_by(conn.cdn,conn.id,conn.o,conn.d) %>% summarise(sd = paste(sd,collapse = ";")) %>% as.data.frame()
+ist_vellore <- ist_vellore %>% cSplit("sd",sep = ";",direction = "wide",type.convert = F) %>% as.data.frame()
+ist_vellore <- ist_vellore %>% select(conn.cdn,conn.id,conn.o,conn.d,dispatch = sd_1, pending = sd_2)
+
+
+write.csv(ist_chennai,"chennnai_blr.csv",row.names = F)
+write.csv(ist_vellore,"vellore_blr.csv",row.names = F)
